@@ -45,6 +45,6 @@ namespace m1
         bool spotlight;
 
         Train *tr;
-        Rail *r, *r1;
+        Rail *r, *r1, *r2, *r3;
     };
 }   // namespace m1

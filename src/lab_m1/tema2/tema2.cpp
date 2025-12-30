@@ -79,10 +79,15 @@ void Tema2::Init()
     spotlight = false;
 
     {
-        r1 = new Rail(glm::vec3(2, 0, 0), glm::vec3(2, -2, 2));
         r = new Rail(glm::vec3(0, 0, 0), glm::vec3(2, 0, 0));
+        r1 = new Rail(glm::vec3(2, 0, 0), glm::vec3(2, 0, 2));
+        r2 = new Rail(glm::vec3(2, 0, 2), glm::vec3(0, 0, 2));
+        r3 = new Rail(glm::vec3(0, 0, 2), glm::vec3(0, 0, 0));
         r->setNext(r1);
-        tr = new Train(r, 0.2f);
+        r1->setNext(r2);
+        r2->setNext(r3);
+        r3->setNext(r);
+        tr = new Train(r, 0.5f);
     }
 }
 
@@ -104,17 +109,17 @@ void Tema2::Update(float deltaTimeSeconds)
 
     {
         glm::mat4 modelMatrix = glm::mat4(1);
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(-0.5));
         modelMatrix = glm::translate(modelMatrix, tr->position);
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(-0.5));
         RenderSimpleMesh(meshes["train"], shaders["LabShader"], modelMatrix, glm::vec3(0.25, 0.75, 0.75));
     }
 
     {
         glm::mat4 modelMatrix = glm::mat4(1);
         modelMatrix = glm::rotate(modelMatrix, RADIANS(90.0f), glm::vec3(0, 1, 0));
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(-0.2, -0.3, 2));
-        modelMatrix = glm::translate(modelMatrix, r->start);
-        RenderSimpleMesh(meshes["rail"], shaders["LabShader"], modelMatrix, glm::vec3(0, 0, 0));
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(-0.2, -0.3, 1));
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 0, -0.5));
+        RenderSimpleMesh(meshes["rail"], shaders["LabShader"], r->modelMatrix, glm::vec3(0, 0, 1));
     }
 
     {
@@ -122,8 +127,14 @@ void Tema2::Update(float deltaTimeSeconds)
         modelMatrix = glm::rotate(modelMatrix, RADIANS(90.0f), glm::vec3(0, 1, 0));
         modelMatrix = glm::scale(modelMatrix, glm::vec3(-0.2, -0.3, 2));
         modelMatrix = glm::translate(modelMatrix, r1->start);
-        RenderSimpleMesh(meshes["rail"], shaders["LabShader"], modelMatrix, glm::vec3(0, 0, 0));
+        RenderSimpleMesh(meshes["rail"], shaders["LabShader"], r1->modelMatrix, glm::vec3(0, 0, 0));
     }
+
+    {
+        RenderSimpleMesh(meshes["rail"], shaders["LabShader"], r2->modelMatrix, glm::vec3(0, 0, 0));
+        RenderSimpleMesh(meshes["rail"], shaders["LabShader"], r3->modelMatrix, glm::vec3(0, 0, 0));
+    }
+
 
     // Render ground
     {

@@ -61,7 +61,7 @@ float point_light_contribution(vec3 light_direction, vec3 light_position)
 
 void main()
 {
-    float ambient_light = 0.25 * material_kd;
+    float ambient_light = 0.50 * material_kd;
     float light = ambient_light;
     light += point_light_contribution(light_direction, light_position);
     light += point_light_contribution(light_direction1, light_position1);

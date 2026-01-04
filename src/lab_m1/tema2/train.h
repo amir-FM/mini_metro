@@ -13,6 +13,7 @@ public:
     float progress;
     float speed;
     glm::vec3 position, start, end;
+    bool noMove;
 
     Train () = default;
     Train (Rail *rail, float speed);

@@ -2,7 +2,9 @@
 
 #include "components/simple_scene.h"
 #include "components/transform.h"
+#include <cmath>
 #include "train.h"
+#include "railroad.h"
 
 
 namespace m1
@@ -30,8 +32,14 @@ namespace m1
         void OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods) override;
         void OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY) override;
         void OnWindowResize(int width, int height) override;
-
-        void RenderTrain();
+        void updateMouseGamePos(int mouseX, int mouseY);
+        void RenderTrain(glm::vec3 center, float rotationAngle, float scale);
+        void RenderBridge(Rail *rail);
+        void RenderTunnel(Rail *rail);
+        void RenderRail(Rail *rail);
+        void RenderRailroad();
+        void CreateCylinderMesh();
+        void RailCheckAndPlace();
 
         glm::vec3 lightPosition;
         glm::vec3 lightDirection;
@@ -43,8 +51,10 @@ namespace m1
 
         // TODO(student): If you need any other class variables, define them here.
         bool spotlight;
+        glm::vec3 mousePos;
 
         Train *tr;
         Rail *r, *r1, *r2, *r3;
+        Railroad rr;
     };
 }   // namespace m1

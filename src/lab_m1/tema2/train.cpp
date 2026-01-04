@@ -1,6 +1,6 @@
 #include "train.h"
 
-Train::Train (Rail *rail, float speed) : rail(rail), progress(0), speed(speed) {
+Train::Train (Rail *rail, float speed) : rail(rail), progress(0), speed(speed), noMove(false) {
     start = position = rail->getStart();
     end = rail->getEnd();
 }
@@ -10,6 +10,8 @@ glm::vec3 Train::getPosition() {
 }
 
 void Train::makeProgress(double delta) {
+    if(noMove) return;
+
     progress += delta * speed;
 
     if(progress >= 1) {
@@ -22,12 +24,14 @@ void Train::makeProgress(double delta) {
 
 
 void Train::calculateNextPosition() {
+
     position.x = lerp(start.x, end.x, progress);
     position.y = lerp(start.y, end.y, progress);
     position.z = lerp(start.z, end.z, progress);
 }
 
 void Train::initNewRail() {
+
     try { 
         if(rail->getNext() == nullptr) return;
 

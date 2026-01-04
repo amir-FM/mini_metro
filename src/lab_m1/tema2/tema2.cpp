@@ -1,4 +1,5 @@
 #include "lab_m1/tema2/tema2.h"
+#include "rail.h"
 
 #include <vector>
 #include <string>
@@ -27,21 +28,108 @@ Tema2::~Tema2()
 void Tema2::Init()
 {
     {
-        Mesh* mesh = new Mesh("box");
-        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "box.obj");
-        meshes[mesh->GetMeshID()] = mesh;
+    vector<VertexFormat> vertices =
+    {
+        VertexFormat(glm::vec3(-0.5, -0.5,  0.5), glm::vec3(0, 1, 1), glm::vec3(0.2, 0.8, 0.6)), // 0
+        VertexFormat(glm::vec3( 0.5, -0.5,  0.5), glm::vec3(0, 1, 1), glm::vec3(0.2, 0.8, 0.6)), // 1
+        VertexFormat(glm::vec3(-0.5,  0.5,  0.5), glm::vec3(0, 1, 1), glm::vec3(0.2, 0.8, 0.6)), // 2
+        VertexFormat(glm::vec3( 0.5,  0.5,  0.5), glm::vec3(0, 0, 1), glm::vec3(0.2, 0.8, 0.6)), // 3
+        VertexFormat(glm::vec3(-0.5, -0.5, -0.5), glm::vec3(0, 1, 0), glm::vec3(0.2, 0.8, 0.6)), // 4
+        VertexFormat(glm::vec3( 0.5, -0.5, -0.5), glm::vec3(1, 1, 1), glm::vec3(0.2, 0.8, 0.6)), // 5
+        VertexFormat(glm::vec3(-0.5,  0.5, -0.5), glm::vec3(0, 0, 1), glm::vec3(0.2, 0.8, 0.6)), // 6
+        VertexFormat(glm::vec3( 0.5,  0.5, -0.5), glm::vec3(1, 0, 0), glm::vec3(0.2, 0.8, 0.6))  // 7
+    };
+
+    vector<unsigned int> indices =
+    {
+        0, 1, 2,    1, 3, 2,    // Front face
+        2, 3, 7,    2, 7, 6,    // Top face
+        1, 7, 3,    1, 5, 7,    // Right face
+        6, 7, 4,    7, 5, 4,    // Back face
+        0, 4, 1,    1, 4, 5,    // Bottom face
+        2, 6, 4,    0, 2, 4     // Left face
+    };
+
+    Mesh* mesh = new Mesh("cube");
+    mesh->InitFromData(vertices, indices);
+    meshes[mesh->GetMeshID()] = mesh;
+    }
+    
+    {
+    vector<VertexFormat> vertices;
+    vector<unsigned int> indices;
+
+    int sides = 17;
+    float radius = 0.5f;
+    float halfH = 0.5f;
+    glm::vec3 color = glm::vec3(0.2, 0.8, 0.6);
+
+    for (int i = 0; i < sides; ++i) {
+        float theta = 2.0f * glm::pi<float>() * (float)i / (float)sides;
+        float x = radius * cos(theta);
+        float z = radius * sin(theta);
+        
+        glm::vec3 sideNormal = glm::normalize(glm::vec3(x, 0, z));
+
+        vertices.push_back(VertexFormat(glm::vec3(x, -halfH, z), sideNormal, color));
+        vertices.push_back(VertexFormat(glm::vec3(x, halfH, z), sideNormal, color));
+    }
+
+    int bottomCenterIndex = (int)vertices.size();
+    vertices.push_back(VertexFormat(glm::vec3(0, -halfH, 0), glm::vec3(0, -1, 0), color));
+
+    int topCenterIndex = (int)vertices.size();
+    vertices.push_back(VertexFormat(glm::vec3(0, halfH, 0), glm::vec3(0, 1, 0), color));
+
+
+    for (int i = 0; i < sides; ++i) {
+        int b0 = i * 2;
+        int t0 = i * 2 + 1;
+        int b1 = ((i + 1) % sides) * 2;
+        int t1 = ((i + 1) % sides) * 2 + 1;
+
+        indices.push_back(b0); indices.push_back(b1); indices.push_back(t0);
+        indices.push_back(t0); indices.push_back(b1); indices.push_back(t1);
+
+        indices.push_back(bottomCenterIndex);
+        indices.push_back(b1);
+        indices.push_back(b0);
+
+        indices.push_back(topCenterIndex);
+        indices.push_back(t0);
+        indices.push_back(t1);
+    }
+
+    Mesh* cylinder = new Mesh("cylinder");
+    cylinder->InitFromData(vertices, indices);
+    meshes[cylinder->GetMeshID()] = cylinder;
     }
 
     {
-        Mesh* mesh = new Mesh("train");
-        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "box.obj");
-        meshes[mesh->GetMeshID()] = mesh;
-    }
-
+    vector<VertexFormat> vertices =
     {
-        Mesh* mesh = new Mesh("rail");
-        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "box.obj");
-        meshes[mesh->GetMeshID()] = mesh;
+        VertexFormat(glm::vec3(0.0f,  0.5f,  0.0f), glm::vec3(0, 1, 0),    glm::vec3(0.2, 0.8, 0.6)),
+        
+        VertexFormat(glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(-1, -1, 1),  glm::vec3(0.2, 0.8, 0.6)),
+        VertexFormat(glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec3(1, -1, 1),   glm::vec3(0.2, 0.8, 0.6)),
+        VertexFormat(glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec3(1, -1, -1),  glm::vec3(0.2, 0.8, 0.6)),
+        VertexFormat(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-1, -1, -1), glm::vec3(0.2, 0.8, 0.6))
+    };
+
+    vector<unsigned int> indices =
+    {
+        0, 1, 2,    // Front face
+        0, 2, 3,    // Right face
+        0, 3, 4,    // Back face
+        0, 4, 1,    // Left face
+
+        1, 3, 2,    // Base triangle 1
+        1, 4, 3     // Base triangle 2
+    };
+
+    Mesh* mesh = new Mesh("pyramid");
+    mesh->InitFromData(vertices, indices);
+    meshes[mesh->GetMeshID()] = mesh;
     }
 
     {
@@ -56,39 +144,38 @@ void Tema2::Init()
         meshes[mesh->GetMeshID()] = mesh;
     }
 
-    // Create a shader program for drawing face polygon with the color of the normal
     {
         Shader *shader = new Shader("LabShader");
-        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "lab8", "shaders", "VertexShader.glsl"), GL_VERTEX_SHADER);
-        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "lab8", "shaders", "FragmentShader.glsl"), GL_FRAGMENT_SHADER);
+        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "tema2", "shaders", "VertexShader.glsl"), GL_VERTEX_SHADER);
+        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "tema2", "shaders", "FragmentShader.glsl"), GL_FRAGMENT_SHADER);
         shader->CreateAndLink();
         shaders[shader->GetName()] = shader;
     }
 
-    // Light & material properties
     {
         lightPosition = glm::vec3(0, 1, 1);
         lightDirection = glm::vec3(0, -1, 0);
         lightPosition1 = glm::vec3(0, 1, 1);
         lightDirection1 = glm::vec3(0, -1, 0);
         materialShininess = 30;
-        materialKd = 0.5;
-        materialKs = 0.5;
+        materialKd = 2;
+        materialKs = 1;
     }
 
     spotlight = false;
 
     {
-        r = new Rail(glm::vec3(0, 0, 0), glm::vec3(2, 0, 0));
-        r1 = new Rail(glm::vec3(2, 0, 0), glm::vec3(2, 0, 2));
-        r2 = new Rail(glm::vec3(2, 0, 2), glm::vec3(0, 0, 2));
-        r3 = new Rail(glm::vec3(0, 0, 2), glm::vec3(0, 0, 0));
-        r->setNext(r1);
-        r1->setNext(r2);
-        r2->setNext(r3);
-        r3->setNext(r);
-        tr = new Train(r, 0.5f);
+        rr.addRail(new Rail(glm::vec3(0, 0, 0), glm::vec3(2, 0, 0)));
+        rr.addRail(new Rail(glm::vec3(2, 0, 0), glm::vec3(2, 0, 2), TUNNEL));
+        rr.addRail(new Rail(glm::vec3(2, 0, 2), glm::vec3(0, 0, 2), BRIDGE));
+        rr.addRail(new Rail(glm::vec3(0, 0, 2), glm::vec3(-2, 0, 2), BRIDGE));
+        rr.addRail(new Rail(glm::vec3(-2, 0, 2), glm::vec3(-2, 0, 0), BRIDGE));
+        rr.addRail(new Rail(glm::vec3(-2, 0, 0), glm::vec3(0, 0, 0), TUNNEL));
+        rr.checkLoop();
+        tr = new Train(rr.getStart(), 1.0f);
     }
+
+    mousePos = glm::vec3(0);
 }
 
 
@@ -107,32 +194,44 @@ void Tema2::FrameStart()
 void Tema2::Update(float deltaTimeSeconds)
 {
 
+    RenderTrain(tr->position + glm::vec3(0, 0.17f, 0), tr->rail->rotation, 0.1f);
+
+    RenderRailroad();
+
     {
         glm::mat4 modelMatrix = glm::mat4(1);
-        modelMatrix = glm::translate(modelMatrix, tr->position);
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(-0.5));
-        RenderSimpleMesh(meshes["train"], shaders["LabShader"], modelMatrix, glm::vec3(0.25, 0.75, 0.75));
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 0.01f, 0));
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.75f, 0.50f, 0.75f));
+        // TODO(student): Add or change the object colors
+        RenderSimpleMesh(meshes["pyramid"], shaders["LabShader"], modelMatrix, glm::vec3(1, 0, 0));
+
     }
 
     {
         glm::mat4 modelMatrix = glm::mat4(1);
-        modelMatrix = glm::rotate(modelMatrix, RADIANS(90.0f), glm::vec3(0, 1, 0));
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(-0.2, -0.3, 1));
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 0, -0.5));
-        RenderSimpleMesh(meshes["rail"], shaders["LabShader"], r->modelMatrix, glm::vec3(0, 0, 1));
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 0.01f, 3));
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.75f, 0.50f, 0.75f));
+        // TODO(student): Add or change the object colors
+        RenderSimpleMesh(meshes["cylinder"], shaders["LabShader"], modelMatrix, glm::vec3(1, 0, 0));
+
     }
 
     {
         glm::mat4 modelMatrix = glm::mat4(1);
-        modelMatrix = glm::rotate(modelMatrix, RADIANS(90.0f), glm::vec3(0, 1, 0));
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(-0.2, -0.3, 2));
-        modelMatrix = glm::translate(modelMatrix, r1->start);
-        RenderSimpleMesh(meshes["rail"], shaders["LabShader"], r1->modelMatrix, glm::vec3(0, 0, 0));
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(2, 0.01f, 2));
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.55f));
+        // TODO(student): Add or change the object colors
+        RenderSimpleMesh(meshes["sphere"], shaders["LabShader"], modelMatrix, glm::vec3(0, 1, 1));
+
     }
 
     {
-        RenderSimpleMesh(meshes["rail"], shaders["LabShader"], r2->modelMatrix, glm::vec3(0, 0, 0));
-        RenderSimpleMesh(meshes["rail"], shaders["LabShader"], r3->modelMatrix, glm::vec3(0, 0, 0));
+        glm::mat4 modelMatrix = glm::mat4(1);
+        modelMatrix = glm::translate(modelMatrix, mousePos);
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.25f));
+        // TODO(student): Add or change the object colors
+        RenderSimpleMesh(meshes["sphere"], shaders["LabShader"], modelMatrix, glm::vec3(1, 0, 0));
+
     }
 
 
@@ -142,7 +241,25 @@ void Tema2::Update(float deltaTimeSeconds)
         modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 0.01f, 0));
         modelMatrix = glm::scale(modelMatrix, glm::vec3(0.25f));
         // TODO(student): Add or change the object colors
-        RenderSimpleMesh(meshes["plane"], shaders["LabShader"], modelMatrix);
+        RenderSimpleMesh(meshes["plane"], shaders["LabShader"], modelMatrix, glm::vec3(0.2, 0.6, 0.22));
+
+    }
+
+    {
+        glm::mat4 modelMatrix = glm::mat4(1);
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(3, 0.02f, 3));
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.1f));
+        // TODO(student): Add or change the object colors
+        RenderSimpleMesh(meshes["plane"], shaders["LabShader"], modelMatrix, glm::vec3(0.67, 0.51, 0.24));
+
+    }
+
+    {
+        glm::mat4 modelMatrix = glm::mat4(1);
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(-3.3, 0.02f, 0));
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.04f, 1, 0.25f));
+        // TODO(student): Add or change the object colors
+        RenderSimpleMesh(meshes["plane"], shaders["LabShader"], modelMatrix, glm::vec3(0.17, 0.11, 0.74));
 
     }
 
@@ -154,7 +271,7 @@ void Tema2::Update(float deltaTimeSeconds)
         RenderMesh(meshes["sphere"], shaders["Simple"], modelMatrix);
     }
 
-    tr->makeProgress(deltaTimeSeconds);
+    if(rr.canRide) tr->makeProgress(deltaTimeSeconds);
 }
 
 
@@ -284,12 +401,38 @@ void Tema2::OnKeyRelease(int key, int mods)
 void Tema2::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
 {
     // Add mouse move event
+    updateMouseGamePos(mouseX, mouseY);
 }
 
 
 void Tema2::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 {
     // Add mouse button press event
+    if(IS_BIT_SET(button, GLFW_MOUSE_BUTTON_LEFT)) {
+        //cout << "mouse: " << mousePos.x << " " << mousePos.z << endl;
+        RailCheckAndPlace();
+        for(auto& it : rr.railroad) {
+            if(it.second->checkAndChange(mousePos)) return;
+        }
+    }
+
+    if(IS_BIT_SET(button, GLFW_MOUSE_BUTTON_RIGHT)) {
+        for(auto& it : rr.railroad) {
+            if(it.second->checkAndChange(mousePos)) {
+                bool trainOnRail = false;
+                if(tr->rail == it.second) trainOnRail = true;
+                rr.delRail(it.second);
+                rr.checkLoop();
+                if(trainOnRail) {
+                    Rail* next = rr.getStart();
+                    if(next == nullptr)
+                        tr->noMove = true;
+                    else tr->rail = next;
+                }
+                return;
+            }
+        }
+    }
 }
 
 
@@ -306,4 +449,170 @@ void Tema2::OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY)
 
 void Tema2::OnWindowResize(int width, int height)
 {
+}
+
+void Tema2::updateMouseGamePos(int mouseX, int mouseY) {
+    glm::ivec2 resolution = window->GetResolution();
+    glm::mat4 projectionMatrix = GetSceneCamera()->GetProjectionMatrix();
+    glm::mat4 viewMatrix = GetSceneCamera()->GetViewMatrix();
+    glm::vec3 cameraPos = GetSceneCamera()->m_transform->GetWorldPosition();
+
+    float x = (2.0f * mouseX) / resolution.x - 1.0f;
+    float y = 1.0f - (2.0f * mouseY) / resolution.y;
+    float z = 1.0f;
+
+    glm::vec3 ray_nds = glm::vec3(x, y, z);
+
+    glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
+
+    glm::vec4 ray_eye = glm::inverse(projectionMatrix) * ray_clip;
+    ray_eye = glm::vec4(ray_eye.x, ray_eye.y, -1.0f, 0.0f);
+
+    glm::vec3 ray_world = glm::vec3(glm::inverse(viewMatrix) * ray_eye);
+    ray_world = glm::normalize(ray_world);
+    float t = -cameraPos.y / ray_world.y;
+
+    if (t >= 0.0f) {
+        glm::vec3 intersectionPoint = cameraPos + (t * ray_world);
+        
+        float finalX = intersectionPoint.x;
+        float finalZ = intersectionPoint.z;
+
+        mousePos.x = finalX;
+        mousePos.z = finalZ;
+    }
+}
+
+void Tema2::RenderBridge(Rail *rail) {
+    RenderSimpleMesh(meshes["cube"], shaders["LabShader"], rail->modelMatrix, glm::vec3(0, 0, rail->working ? 1 : 0));
+    RenderSimpleMesh(meshes["cube"], shaders["LabShader"], rail->bridgeMatrix1, glm::vec3(0, 0, rail->working ? 0 : 1));
+    RenderSimpleMesh(meshes["cube"], shaders["LabShader"], rail->bridgeMatrix2, glm::vec3(0, 0, rail->working ? 0 : 1));
+}
+
+void Tema2::RenderTunnel(Rail *rail) {
+    RenderSimpleMesh(meshes["cube"], shaders["LabShader"], rail->modelMatrix, glm::vec3(0, 0, rail->working ? 1 : 0));
+    RenderSimpleMesh(meshes["cube"], shaders["LabShader"], rail->tunnelMatrix, glm::vec3(0, 0, rail->working ? 0 : 1));
+}
+
+void Tema2::RenderRail(Rail *rail) {
+    switch(rail->type) {
+    case LAND:
+        RenderSimpleMesh(meshes["cube"], shaders["LabShader"], rail->modelMatrix, glm::vec3(0, 0, rail->working ? 1 : 0));
+        break;
+    case BRIDGE:
+        RenderBridge(rail);
+        break;
+    case TUNNEL:
+        RenderTunnel(rail);
+        break;
+    }
+}
+
+void Tema2::RenderTrain(glm::vec3 center, float rotationAngle, float scale) {
+    glm::mat4 modelMatrix = glm::mat4(1);
+    
+    // 1. Move to position
+    modelMatrix = glm::translate(modelMatrix, center);
+    
+    // 2. Rotate to face the movement direction
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotationAngle), glm::vec3(0, 1, 0));
+    
+    // 3. Apply the global scale
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(scale));
+
+    // --- Base (The floor of the train) ---
+    {
+        glm::mat4 baseMatrix = glm::translate(modelMatrix, glm::vec3(0, 0.05f, 0));
+        baseMatrix = glm::scale(baseMatrix, glm::vec3(4.0f, 0.15f, 1.2f));
+        RenderSimpleMesh(meshes["cube"], shaders["LabShader"], baseMatrix, glm::vec3(1, 1, 0));
+    }
+
+    // --- Cabin (The driver's room) ---
+    {
+        glm::mat4 cabinMatrix = glm::translate(modelMatrix, glm::vec3(-1.1f, 1.05f, 0));
+        cabinMatrix = glm::scale(cabinMatrix, glm::vec3(1.4f, 1.8f, 1.2f));
+        RenderSimpleMesh(meshes["cube"], shaders["LabShader"], cabinMatrix, glm::vec3(0, 1, 0));
+    }
+
+    // --- Boiler (Main body cylinder) ---
+    {
+        glm::mat4 boilerMatrix = glm::translate(modelMatrix, glm::vec3(0.5f, 0.65f, 0));
+        boilerMatrix = glm::rotate(boilerMatrix, glm::radians(90.0f), glm::vec3(0, 0, 1));
+        boilerMatrix = glm::scale(boilerMatrix, glm::vec3(1.0f, 2.4f, 1.0f));  
+        RenderSimpleMesh(meshes["cylinder"], shaders["LabShader"], boilerMatrix, glm::vec3(0, 0, 1));
+    }
+
+    // --- Nose (The front tip) ---
+    {
+        glm::mat4 noseMatrix = glm::translate(modelMatrix, glm::vec3(1.8f, 0.65f, 0));
+        noseMatrix = glm::rotate(noseMatrix, glm::radians(90.0f), glm::vec3(0, 0, 1));
+        noseMatrix = glm::scale(noseMatrix, glm::vec3(0.3f, 0.25f, 0.3f));
+        RenderSimpleMesh(meshes["cylinder"], shaders["LabShader"], noseMatrix, glm::vec3(1, 0, 1));
+    }
+
+    // --- Wheels ---
+    float wheelRadius = 0.4f;
+    float startX = -1.6f;
+    float spacing = 0.68f;
+
+    for (int i = 0; i < 6; i++) {
+        for (float zOffset : {-0.6f, 0.6f}) {
+            glm::mat4 wheelMatrix = glm::translate(modelMatrix, glm::vec3(startX + i * spacing, -0.25f, zOffset));
+            wheelMatrix = glm::rotate(wheelMatrix, glm::radians(90.0f), glm::vec3(1, 0, 0));
+            wheelMatrix = glm::scale(wheelMatrix, glm::vec3(wheelRadius * 2, 0.2f, wheelRadius * 2));
+            RenderSimpleMesh(meshes["cylinder"], shaders["LabShader"], wheelMatrix, glm::vec3(1, 0, 0));
+        }
+    }
+}
+
+void Tema2::RenderRailroad() {
+    for(auto& it : rr.railroad) {
+        RenderRail(it.second);
+    }
+}
+
+
+void Tema2::RailCheckAndPlace() {
+    float width = 0.2f;
+    bool added = false;
+
+    int baseX = (int)glm::round(mousePos.x / 2) * 2;
+    int baseZ = (int)glm::round(mousePos.z / 2) * 2;
+    float x = mousePos.x;
+    float z = mousePos.z;
+
+    if(rr.railExists(glm::vec2(baseX, baseZ))) return;
+
+    cout << baseX << ", " << baseZ << endl;
+
+    if(abs(x - baseX) < width) {
+        if(z > baseZ) {
+            cout << baseX << ", " << baseZ << " - " << baseX << ", " << baseZ + 2 << endl;
+            rr.addRail(new Rail(glm::vec3(baseX, 0, baseZ), glm::vec3(baseX, 0, baseZ + 2)));
+            added = true;
+        }else {
+            cout << baseX << ", " << baseZ << " - " << baseX << ", " << baseZ - 2 << endl;
+            rr.addRail(new Rail(glm::vec3(baseX, 0, baseZ), glm::vec3(baseX, 0, baseZ - 2)));
+            added = true;
+        }
+    }else if(abs(z - baseZ) < width) {
+        if(x > baseX) {
+            cout << baseX << ", " << baseZ << " - " << baseX + 2 << ", " << baseZ << endl;
+            rr.addRail(new Rail(glm::vec3(baseX, 0, baseZ), glm::vec3(baseX + 2, 0, baseZ)));
+            added = true;
+        }else {
+            cout << baseX << ", " << baseZ << " - " << baseX - 2 << ", " << baseZ << endl;
+            rr.addRail(new Rail(glm::vec3(baseX, 0, baseZ), glm::vec3(baseX - 2, 0, baseZ)));
+            added = true;
+        }
+    }
+
+    if(added) {
+        if(rr.checkLoop()) {
+            if(tr->noMove) {
+                tr->rail = rr.getStart();
+                tr->noMove = false;
+            }
+        }
+    }
 }

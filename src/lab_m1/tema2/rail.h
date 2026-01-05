@@ -13,6 +13,7 @@ public:
 
     Rail *next;
     glm::vec3 start, end;
+    std::pair<int, int> end_pair;
     RailType type;
     glm::mat4 modelMatrix;
     glm::mat4 translateMatrix;

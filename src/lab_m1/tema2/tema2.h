@@ -1,10 +1,14 @@
 #pragma once
 
+#include <ctime>
+#include <cstdlib>
+#include <cmath>
+#include <map>
 #include "components/simple_scene.h"
 #include "components/transform.h"
-#include <cmath>
 #include "train.h"
 #include "railroad.h"
+#include "station.h"
 
 
 namespace m1
@@ -34,12 +38,19 @@ namespace m1
         void OnWindowResize(int width, int height) override;
         void updateMouseGamePos(int mouseX, int mouseY);
         void RenderTrain(glm::vec3 center, float rotationAngle, float scale);
+        void RenderCarriage(glm::vec3 center, float rotationAngle, float scale);
         void RenderBridge(Rail *rail);
         void RenderTunnel(Rail *rail);
         void RenderRail(Rail *rail);
         void RenderRailroad();
         void CreateCylinderMesh();
         void RailCheckAndPlace();
+        void RenderStation(Station* station);
+        void RenderStations();
+        void GenerateNewStation();
+        void CheckStations();
+        void RenderWholeTrain();
+        void StationWait();
 
         glm::vec3 lightPosition;
         glm::vec3 lightDirection;
@@ -48,6 +59,7 @@ namespace m1
         unsigned int materialShininess;
         float materialKd;
         float materialKs;
+        bool wait;
 
         // TODO(student): If you need any other class variables, define them here.
         bool spotlight;
@@ -56,5 +68,6 @@ namespace m1
         Train *tr;
         Rail *r, *r1, *r2, *r3;
         Railroad rr;
+        map<pair<int, int>, Station*> stations;
     };
 }   // namespace m1

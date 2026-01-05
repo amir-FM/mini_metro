@@ -20,6 +20,7 @@ Rail* Rail::getNext() {
 }
 
 void Rail::makeMatrix() {
+    end_pair = {end.x, end.z};
     modelMatrix = glm::mat4(1.0f);
 
     float lengthX = end.x - start.x;

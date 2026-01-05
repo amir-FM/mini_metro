@@ -27,6 +27,7 @@ Tema2::~Tema2()
 
 void Tema2::Init()
 {
+    srand(time(nullptr));
     {
     vector<VertexFormat> vertices =
     {
@@ -173,6 +174,9 @@ void Tema2::Init()
         rr.addRail(new Rail(glm::vec3(-2, 0, 0), glm::vec3(0, 0, 0), TUNNEL));
         rr.checkLoop();
         tr = new Train(rr.getStart(), 1.0f);
+        tr->addCarriage();
+        tr->addCarriage();
+        tr->addCarriage();
     }
 
     mousePos = glm::vec3(0);
@@ -194,36 +198,9 @@ void Tema2::FrameStart()
 void Tema2::Update(float deltaTimeSeconds)
 {
 
-    RenderTrain(tr->position + glm::vec3(0, 0.17f, 0), tr->rail->rotation, 0.1f);
+    RenderWholeTrain();
 
     RenderRailroad();
-
-    {
-        glm::mat4 modelMatrix = glm::mat4(1);
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 0.01f, 0));
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.75f, 0.50f, 0.75f));
-        // TODO(student): Add or change the object colors
-        RenderSimpleMesh(meshes["pyramid"], shaders["LabShader"], modelMatrix, glm::vec3(1, 0, 0));
-
-    }
-
-    {
-        glm::mat4 modelMatrix = glm::mat4(1);
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 0.01f, 3));
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.75f, 0.50f, 0.75f));
-        // TODO(student): Add or change the object colors
-        RenderSimpleMesh(meshes["cylinder"], shaders["LabShader"], modelMatrix, glm::vec3(1, 0, 0));
-
-    }
-
-    {
-        glm::mat4 modelMatrix = glm::mat4(1);
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(2, 0.01f, 2));
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.55f));
-        // TODO(student): Add or change the object colors
-        RenderSimpleMesh(meshes["sphere"], shaders["LabShader"], modelMatrix, glm::vec3(0, 1, 1));
-
-    }
 
     {
         glm::mat4 modelMatrix = glm::mat4(1);
@@ -233,6 +210,9 @@ void Tema2::Update(float deltaTimeSeconds)
         RenderSimpleMesh(meshes["sphere"], shaders["LabShader"], modelMatrix, glm::vec3(1, 0, 0));
 
     }
+
+    GenerateNewStation();
+    RenderStations();
 
 
     // Render ground
@@ -272,6 +252,9 @@ void Tema2::Update(float deltaTimeSeconds)
     }
 
     if(rr.canRide) tr->makeProgress(deltaTimeSeconds);
+    if(tr->progress == 1 && !tr->stationDone)
+        CheckStations();
+
 }
 
 
@@ -377,6 +360,8 @@ void Tema2::OnInputUpdate(float deltaTime, int mods)
         if (window->KeyHold(GLFW_KEY_K)) lightDirection += right * deltaTime * speed;
 
     }
+
+    if (window->KeyHold(GLFW_KEY_Z)) tr->speed = 5.0f;
 }
 
 
@@ -395,6 +380,9 @@ void Tema2::OnKeyPress(int key, int mods)
 void Tema2::OnKeyRelease(int key, int mods)
 {
     // Add key release event
+    if(key == GLFW_KEY_Z) {
+        tr->speed = 1.0f;
+    }
 }
 
 
@@ -427,7 +415,10 @@ void Tema2::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
                     Rail* next = rr.getStart();
                     if(next == nullptr)
                         tr->noMove = true;
-                    else tr->rail = next;
+                    else {
+                        tr->rail = next;
+                        tr->initCarriagePositions();
+                    }
                 }
                 return;
             }
@@ -611,8 +602,127 @@ void Tema2::RailCheckAndPlace() {
         if(rr.checkLoop()) {
             if(tr->noMove) {
                 tr->rail = rr.getStart();
+                tr->initCarriagePositions();
                 tr->noMove = false;
             }
         }
+    }
+}
+
+void Tema2::RenderStation(Station* station) {
+    {
+        glm::mat4 modelMatrix = glm::mat4(1);
+        modelMatrix = glm::translate(modelMatrix, station->globalPos + glm::vec3(0, 0.17f, 0));
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.55f));
+        // TODO(student): Add or change the object colors
+        RenderSimpleMesh(meshes[station->type_s], shaders["LabShader"], modelMatrix, glm::vec3(1, station->dim * 1.0f / station->cap, 1));
+
+    }
+
+    float offset = 0.7f;
+
+    for(auto& it : station->passengers) {
+        glm::mat4 modelMatrix = glm::mat4(1);
+        modelMatrix = glm::translate(modelMatrix, station->globalPos + glm::vec3(0, offset, 0));
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.15f));
+        // TODO(student): Add or change the object colors
+        RenderSimpleMesh(meshes[it->dest_s], shaders["LabShader"], modelMatrix, glm::vec3(0.5f, 0.5f, 1));
+        offset += 0.3f;
+
+    }
+}
+
+void Tema2::GenerateNewStation() {
+    if(rand() % 10000 >= 20) return;
+
+    Station *ns = new Station();
+
+    if(stations.find(ns->position) != stations.end())
+        return;
+
+    stations[ns->position] = ns;
+}
+
+void Tema2::RenderStations() {
+    for(auto& it : stations) {
+        it.second->generatePassenger();
+        RenderStation(it.second);
+    }
+}
+
+void Tema2::CheckStations() {
+    if(stations.find(tr->rail->end_pair) != stations.end()) {
+        Station* station = stations[tr->rail->end_pair];
+        station->unload(tr);
+        station->load(tr);
+        tr->stationWait = true;
+        cout << "[CheckStations] " << tr->dim << " - " << tr->cap << " - c: " << tr->circle << ", s: " << tr->square << ", t: " << tr->triangle << endl;
+    }
+
+    tr->stationDone = true;
+}
+
+void Tema2::RenderCarriage(glm::vec3 center, float rotationAngle, float scale) {
+    glm::mat4 modelMatrix = glm::mat4(1);
+    
+    // 1. Move to position
+    modelMatrix = glm::translate(modelMatrix, center);
+    
+    // 2. Rotate to face the movement direction
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotationAngle), glm::vec3(0, 1, 0));
+    
+    // 3. Apply the global scale
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(scale));
+
+    // --- Base (Yellow floor) ---
+    // Matches the train's base dimensions for consistency
+    {
+        glm::mat4 baseMatrix = glm::translate(modelMatrix, glm::vec3(0, 0.05f, 0));
+        baseMatrix = glm::scale(baseMatrix, glm::vec3(4.0f, 0.15f, 1.2f));
+        RenderSimpleMesh(meshes["cube"], shaders["LabShader"], baseMatrix, glm::vec3(1, 1, 0)); // Yellow
+    }
+
+    // --- Main Body (Green container) ---
+    // Placed on top of the base. Height is increased to look like a carriage.
+    {
+        glm::mat4 bodyMatrix = glm::translate(modelMatrix, glm::vec3(0, 0.95f, 0));
+        bodyMatrix = glm::scale(bodyMatrix, glm::vec3(3.8f, 1.65f, 1.2f));
+        RenderSimpleMesh(meshes["cube"], shaders["LabShader"], bodyMatrix, glm::vec3(0, 1, 0)); // Green
+    }
+
+    // --- Wheels (Red) ---
+    // The image shows two wheels on the side view. 
+    // Usually, carriages have wheels near the front and back.
+    float wheelRadius = 0.45f;
+    float wheelXOffset = 1.3f; // Distance from center to front/back wheels
+
+    for (float xPos : {-wheelXOffset, wheelXOffset}) { // Front and Back pairs
+        for (float zOffset : {-0.6f, 0.6f}) {        // Left and Right sides
+            glm::mat4 wheelMatrix = glm::translate(modelMatrix, glm::vec3(xPos, -0.25f, zOffset));
+            wheelMatrix = glm::rotate(wheelMatrix, glm::radians(90.0f), glm::vec3(1, 0, 0));
+            // Using cylinder to match your train's wheel style
+            wheelMatrix = glm::scale(wheelMatrix, glm::vec3(wheelRadius * 2, 0.2f, wheelRadius * 2));
+            RenderSimpleMesh(meshes["cylinder"], shaders["LabShader"], wheelMatrix, glm::vec3(1, 0, 0)); // Red
+        }
+    }
+}
+
+void Tema2::RenderWholeTrain() {
+    RenderTrain(tr->position + glm::vec3(0, 0.17f, 0), tr->rail->rotation, 0.1f);
+
+    for(auto& it : tr->carriages) {
+        RenderCarriage(it->position + glm::vec3(0, 0.17f, 0), it->rail->rotation, 0.1f);
+    }
+}
+
+void Tema2::StationWait() {
+    static int timer = 0;
+    timer++;
+    if(timer > 0 && !wait)
+        wait = true;
+
+    if(timer > 10000) {
+        timer = 0;
+        wait = false;
     }
 }

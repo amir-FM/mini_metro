@@ -3,7 +3,9 @@
 #include <iostream>
 #include "utils/math_utils.h"
 #include "components/transform.h"
+#include <vector>
 #include "rail.h"
+#include "carriage.h"
 
 using namespace std;
 
@@ -14,6 +16,13 @@ public:
     float speed;
     glm::vec3 position, start, end;
     bool noMove;
+    bool stationDone;
+    int square, circle, triangle;
+    int dim;
+    int cap;
+    vector<Carriage*> carriages;
+    bool stationWait;
+    float timer;
 
     Train () = default;
     Train (Rail *rail, float speed);
@@ -23,4 +32,10 @@ public:
     void makeProgress(double delta);
     void calculateNextPosition();
     void initNewRail();
+    void addCarriage();
+    void delCarriage();
+    void initCarriagePositions();
+    void progressCarriages(double delta);
+    void stopTrain();
+    void startTrain();
 };

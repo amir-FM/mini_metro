@@ -29,8 +29,6 @@ Build and manage a railway network connecting stations across a 3D map. Dispatch
 | **Space** | Pause / resume simulation |
 | **R** | Restart game |
 
-*(Update the table above if your `tema2.cpp` uses different keybindings.)*
-
 ---
 
 ## Project Structure
